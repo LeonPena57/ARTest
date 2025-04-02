@@ -78,6 +78,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function initARScene() {
+    alert("Initializing AR Scene..."); // Debugging step
+
     permissionPopup.classList.add("hidden");
     container.classList.remove("hidden");
     modelContainer.classList.remove("hidden");
@@ -85,48 +87,62 @@ document.addEventListener("DOMContentLoaded", () => {
     // Set up Three.js scene
     scene = new THREE.Scene();
 
-    // Set up WebXR-enabled renderer
+    // Set up WebGL Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.xr.enabled = true; // ✅ Enables AR support
+    renderer.xr.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
     modelContainer.appendChild(renderer.domElement);
 
-    // Set up AR camera and session
-    const session = await navigator.xr.requestSession("immersive-ar", {
-      requiredFeatures: ["local-floor"], // Tracks the user's space relative to the ground
-    });
-    renderer.xr.setSession(session);
+    alert("Renderer initialized!"); // Debugging step
 
-    // Set up AR Camera
-    camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    scene.add(camera);
-
-    // Add lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-    scene.add(ambientLight);
-
-    // ✅ Create a cube
-    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2); // Cube size (meters)
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); // Green cube
-    model = new THREE.Mesh(geometry, material);
-
-    // ✅ Position cube in front of user
-    model.position.set(0, 0, -1); // 1 meter in front of user
-    scene.add(model);
-
-    // XR animation loop
-    function animate() {
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
+    try {
+      // Request AR session
+      const session = await navigator.xr.requestSession("immersive-ar", {
+        requiredFeatures: ["local-floor"],
       });
-    }
+      alert("AR session started!"); // Debugging step
 
-    animate();
+      renderer.xr.setSession(session);
+
+      // Set up AR Camera
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      scene.add(camera);
+
+      alert("Camera added!"); // Debugging step
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+      scene.add(ambientLight);
+
+      alert("Lights added!"); // Debugging step
+
+      // Create a cube
+      const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+      const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+      model = new THREE.Mesh(geometry, material);
+      model.position.set(0, 0, -1);
+      scene.add(model);
+
+      alert("Cube added!"); // Debugging step
+
+      // Start AR animation loop
+      function animate() {
+        renderer.setAnimationLoop(() => {
+          renderer.render(scene, camera);
+        });
+      }
+
+      animate();
+      alert("Animation started!"); // Debugging step
+    } catch (error) {
+      alert("AR Initialization Error: " + error.message);
+      console.error("AR Initialization Error:", error);
+    }
   }
 
   function initFallbackView() {
