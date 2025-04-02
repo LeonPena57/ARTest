@@ -1,4 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // Add debug container
+  const debugContainer = document.createElement("div");
+  debugContainer.style.position = "fixed";
+  debugContainer.style.top = "0";
+  debugContainer.style.left = "0";
+  debugContainer.style.color = "white";
+  debugContainer.style.zIndex = "1000";
+  document.body.appendChild(debugContainer);
+
+  function debugLog(message) {
+    console.log(message);
+    debugContainer.innerHTML += `${message}<br>`;
+  }
+
   // DOM elements
   const permissionPopup = document.getElementById("permission-popup");
   const useCameraBtn = document.getElementById("use-camera");
@@ -8,6 +22,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const modelContainer = document.getElementById("model-container");
   const fallbackContainer = document.getElementById("fallback-container");
   const loading = document.getElementById("loading");
+
+  debugLog("DOM elements loaded");
 
   // Three.js variables
   let scene, camera, renderer, model;
@@ -20,132 +36,115 @@ document.addEventListener("DOMContentLoaded", () => {
   // Event listeners for buttons
   useCameraBtn.addEventListener("click", async () => {
     try {
+      debugLog("AR button clicked");
       permissionPopup.classList.add("hidden");
       container.classList.remove("hidden");
       modelContainer.classList.remove("hidden");
       loading.classList.remove("hidden");
 
-      // Request AR session **inside the click event**
+      debugLog("Requesting AR session...");
       const session = await navigator.xr.requestSession("immersive-ar", {
         requiredFeatures: ["local-floor"],
       });
+      debugLog(`AR session granted: ${session ? "yes" : "no"}`);
 
       await initARScene(session);
     } catch (err) {
+      debugLog(`AR Initialization Error: ${err.message}`);
       alert("AR Initialization Error: " + err.message);
     }
   });
-  viewOnlyBtn.addEventListener("click", initFallbackView);
 
-  function showCameraError(message) {
-    alert(message);
+  viewOnlyBtn.addEventListener("click", () => {
+    debugLog("View only button clicked");
     initFallbackView();
-  }
-
-  function getFriendlyError(err) {
-    if (err.name === "NotAllowedError") {
-      return "Camera access was denied. Please allow camera permissions in your browser settings.";
-    } else if (err.name === "NotFoundError") {
-      return "No camera found on this device.";
-    } else if (
-      location.protocol !== "https:" &&
-      location.hostname !== "localhost"
-    ) {
-      return (
-        "Camera requires HTTPS or localhost. Current protocol: " +
-        location.protocol
-      );
-    }
-    return "Camera error: " + err.message;
-  }
-
-  function initARView() {
-    permissionPopup.classList.add("hidden");
-    container.classList.remove("hidden");
-    loading.classList.remove("hidden");
-
-    // Check for camera support
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      showCameraError("Camera API not supported in this browser");
-      return;
-    }
-
-    const constraints = {
-      video: {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
-      },
-    };
-
-    navigator.mediaDevices
-      .getUserMedia(constraints)
-      .then((stream) => {
-        arView.srcObject = stream;
-        arView.onloadedmetadata = () => {
-          arView.play();
-          initARScene();
-        };
-      })
-      .catch((err) => {
-        console.error("Camera error:", err);
-        showCameraError(getFriendlyError(err));
-      });
-  }
+  });
 
   async function initARScene(session) {
-    alert("Initializing AR Scene...");
+    try {
+      debugLog("Initializing AR Scene...");
 
-    // Set up Three.js scene
-    scene = new THREE.Scene();
+      // Set up Three.js scene
+      scene = new THREE.Scene();
+      debugLog("Scene created");
 
-    // Set up WebGL Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.xr.enabled = true;
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    modelContainer.appendChild(renderer.domElement);
-
-    alert("Renderer initialized!");
-
-    // Set session inside the function
-    renderer.xr.setSession(session);
-    alert("AR session started!");
-
-    // Set up AR Camera
-    camera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    scene.add(camera);
-
-    alert("Camera added!");
-
-    // Add lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-    scene.add(ambientLight);
-
-    alert("Lights added!");
-
-    // Create a simple cube
-    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-    model = new THREE.Mesh(geometry, material);
-    model.position.set(0, 0, -1);
-    scene.add(model);
-
-    alert("Cube added!");
-
-    // Start AR animation loop
-    function animate() {
-      renderer.setAnimationLoop(() => {
-        renderer.render(scene, camera);
+      // Set up WebGL Renderer
+      debugLog("Creating WebGL renderer...");
+      renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true, // Helps with debugging
       });
-    }
 
-    animate();
-    alert("Animation started!");
+      if (!renderer) {
+        throw new Error("Failed to create WebGL renderer");
+      }
+
+      renderer.xr.enabled = true;
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      debugLog(`Appending renderer to: ${modelContainer.id}`);
+      modelContainer.appendChild(renderer.domElement);
+      debugLog("Renderer initialized");
+
+      // Verify WebGL context
+      const gl = renderer.getContext();
+      debugLog(`WebGL context: ${gl ? "created" : "failed"}`);
+      debugLog(
+        `WebGL attributes: ${JSON.stringify(gl.getContextAttributes())}`
+      );
+
+      // Set XR session
+      debugLog("Setting XR session...");
+      await renderer.xr.setSession(session);
+      debugLog("XR session set");
+
+      // Set up AR Camera
+      debugLog("Creating AR camera");
+      camera = new THREE.PerspectiveCamera(
+        60,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+      );
+      scene.add(camera);
+      debugLog(`Camera position: ${camera.position.toArray()}`);
+
+      // Add lighting
+      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+      scene.add(ambientLight);
+      debugLog("Lights added");
+
+      // Create test cube
+      const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x00ff00,
+        wireframe: true, // Wireframe for debugging
+      });
+      model = new THREE.Mesh(geometry, material);
+      model.position.set(0, 0, -1);
+      scene.add(model);
+      debugLog("Cube added");
+
+      // Animation loop with debug info
+      let frameCount = 0;
+      function animate() {
+        renderer.setAnimationLoop(() => {
+          frameCount++;
+          if (frameCount % 60 === 0) {
+            debugLog(`Rendering frame ${frameCount}`);
+            debugLog(`Camera position: ${camera.position.toArray()}`);
+            debugLog(`Cube position: ${model.position.toArray()}`);
+          }
+          renderer.render(scene, camera);
+        });
+      }
+
+      animate();
+      debugLog("Animation started");
+    } catch (err) {
+      debugLog(`AR Scene Error: ${err.message}`);
+      alert(`AR Scene Error: ${err.message}`);
+    }
   }
 
   function initFallbackView() {
@@ -250,4 +249,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     animate();
   }
+  debugLog(`XR support: ${navigator.xr ? "available" : "unavailable"}`);
+  debugLog(
+    `WebGL support: ${
+      THREE.WEBGL.isWebGLAvailable() ? "available" : "unavailable"
+    }`
+  );
+  debugLog(`Secure context: ${window.isSecureContext ? "yes" : "no"}`);
 });
