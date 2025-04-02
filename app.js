@@ -99,16 +99,10 @@ document.addEventListener("DOMContentLoaded", () => {
     scene = new THREE.Scene();
 
     // Set up WebGL Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); // ✅ Enable transparency
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.xr.enabled = true;
     renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.domElement.style.position = "absolute"; // ✅ Make sure it overlays properly
-    renderer.domElement.style.top = "0";
-    renderer.domElement.style.left = "0";
     modelContainer.appendChild(renderer.domElement);
-
-    renderer.setClearColor(0x000000, 0); // ✅ Ensure transparency
 
     alert("Renderer initialized!");
 
