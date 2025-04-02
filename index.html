@@ -2,32 +2,25 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <title>DaBaby AR Viewer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Viewer</title>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/webxr-polyfill@latest/dist/webxr-polyfill.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/XRController.js"></script>
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div id="permission-popup">
-      <h1>DaBaby AR Viewer</h1>
-      <p>View the DaBaby model in AR or 3D</p>
-      <button id="use-camera">Use Camera (AR)</button>
-      <button id="view-only">View in 3D</button>
+    <div id="permission-popup" class="centered-popup">
+      <h1>AR Viewer</h1>
+      <button id="start-ar">Start AR Experience</button>
+      <p id="error-message"></p>
     </div>
 
-    <div id="loading" class="hidden">Loading model...</div>
-
-    <div id="container" class="hidden">
-      <div id="model-container"></div>
-      <div id="fallback-container" class="hidden"></div>
+    <div id="loading" class="hidden">
+      <div class="loader"></div>
+      <p>Initializing AR...</p>
     </div>
+
+    <div id="ar-container" class="hidden"></div>
 
     <script src="app.js"></script>
   </body>

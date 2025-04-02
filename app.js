@@ -1,265 +1,102 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Add debug container
-  const debugContainer = document.createElement("div");
-  debugContainer.style.position = "fixed";
-  debugContainer.style.top = "0";
-  debugContainer.style.left = "0";
-  debugContainer.style.color = "white";
-  debugContainer.style.zIndex = "1000";
-  document.body.appendChild(debugContainer);
+  const permissionPopup = document.getElementById("permission-popup");
+  const startButton = document.getElementById("start-ar");
+  const loading = document.getElementById("loading");
+  const errorMessage = document.getElementById("error-message");
+  const arContainer = document.getElementById("ar-container");
 
-  function debugLog(message) {
-    console.log(message);
-    debugContainer.innerHTML += `${message}<br>`;
+  // Check for WebXR support
+  if (!navigator.xr) {
+    showError("WebXR not supported in this browser");
+    return;
   }
 
-  // DOM elements
-  const permissionPopup = document.getElementById("permission-popup");
-  const useCameraBtn = document.getElementById("use-camera");
-  const viewOnlyBtn = document.getElementById("view-only");
-  const container = document.getElementById("container");
-  const arView = document.getElementById("ar-view");
-  const modelContainer = document.getElementById("model-container");
-  const fallbackContainer = document.getElementById("fallback-container");
-  const loading = document.getElementById("loading");
-
-  debugLog("DOM elements loaded");
-
-  // Three.js variables
-  let scene, camera, renderer, model;
-  let fallbackScene,
-    fallbackCamera,
-    fallbackRenderer,
-    fallbackModel,
-    fallbackControls;
-
-  // Event listeners for buttons
-  useCameraBtn.addEventListener("click", async () => {
+  startButton.addEventListener("click", async () => {
     try {
-      debugLog("AR button clicked");
       permissionPopup.classList.add("hidden");
-      container.classList.remove("hidden");
-      modelContainer.classList.remove("hidden");
       loading.classList.remove("hidden");
 
-      debugLog("Requesting AR session...");
+      // Request AR session
       const session = await navigator.xr.requestSession("immersive-ar", {
-        requiredFeatures: ["local-floor"],
+        requiredFeatures: ["local", "hit-test"],
       });
-      debugLog(`AR session granted: ${session ? "yes" : "no"}`);
 
-      await initARScene(session);
+      initXRScene(session);
     } catch (err) {
-      debugLog(`AR Initialization Error: ${err.message}`);
-      alert("AR Initialization Error: " + err.message);
+      showError(`AR failed to start: ${err.message}`);
     }
   });
 
-  viewOnlyBtn.addEventListener("click", () => {
-    debugLog("View only button clicked");
-    initFallbackView();
-  });
-
-  async function initARScene(session) {
+  async function initXRScene(session) {
     try {
-      debugLog("Initializing AR Scene...");
-
-      // Set up Three.js scene
-      scene = new THREE.Scene();
-      debugLog("Scene created");
-
-      // Set up WebGL Renderer with XR compatibility
-      debugLog("Creating WebGL renderer...");
-      renderer = new THREE.WebGLRenderer({
+      // Three.js setup
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(
+        70,
+        window.innerWidth / window.innerHeight,
+        0.01,
+        1000
+      );
+      const renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        preserveDrawingBuffer: true,
       });
 
-      if (!renderer) {
-        throw new Error("Failed to create WebGL renderer");
-      }
-
-      // Enable XR and set session
-      renderer.xr.enabled = true;
-      await renderer.xr.setSession(session);
-      debugLog("XR session set");
-
-      // Set renderer size and append to DOM
       renderer.setSize(window.innerWidth, window.innerHeight);
-      modelContainer.appendChild(renderer.domElement);
-      debugLog("Renderer initialized");
+      renderer.xr.enabled = true;
+      renderer.xr.setSession(session);
+      arContainer.appendChild(renderer.domElement);
+      arContainer.classList.remove("hidden");
 
-      // Create XR camera (crucial for AR view)
-      camera = new THREE.PerspectiveCamera();
-      camera.matrixAutoUpdate = false;
-      scene.add(camera);
-
-      // Add camera passthrough background
+      // Add camera background (real world view)
       scene.background = new THREE.WebGLRenderTarget().texture;
-      const bgTexture = new THREE.WebGLRenderTarget(
-        window.innerWidth,
-        window.innerHeight
-      ).texture;
-      scene.background = bgTexture;
 
-      // Create camera feed plane
-      const cameraFeedGeometry = new THREE.PlaneGeometry(2, 2);
-      const cameraFeedMaterial = new THREE.MeshBasicMaterial({
-        map: bgTexture,
-        toneMapped: false,
+      // Add simple cube
+      const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+      const cube = new THREE.Mesh(geometry, material);
+      cube.position.set(0, 0, -0.5);
+      scene.add(cube);
+
+      // Handle XR session events
+      session.addEventListener("end", () => {
+        location.reload();
       });
-      const cameraFeed = new THREE.Mesh(cameraFeedGeometry, cameraFeedMaterial);
-      cameraFeed.frustumCulled = false;
-      scene.add(cameraFeed);
 
-      // Add AR content
-      const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      const material = new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        wireframe: true,
-      });
-      model = new THREE.Mesh(geometry, material);
-      model.position.set(0, 0, -1);
-      scene.add(model);
+      // Animation loop
+      renderer.setAnimationLoop(() => {
+        // Update camera position from XR frame
+        const frame = session.requestAnimationFrame();
+        const pose = frame.getViewerPose(session.renderState.referenceSpace);
 
-      // Animation loop with XR updates
-      renderer.setAnimationLoop((timestamp, frame) => {
-        if (frame) {
-          const bgTexture = renderer.xr.getCameraImage();
-          if (bgTexture) cameraFeedMaterial.map = bgTexture;
-
-          const pose = frame.getViewerPose(
-            new THREE.XRReferenceSpace(renderer.xr.getReferenceSpace())
+        if (pose) {
+          const view = pose.views[0];
+          camera.projectionMatrix.fromArray(view.projectionMatrix);
+          const viewMatrix = new THREE.Matrix4().fromArray(
+            view.transform.inverse.matrix
           );
-
-          if (pose) {
-            for (const view of pose.views) {
-              const viewport = renderer.xr.getViewport(view);
-              camera.projectionMatrix.fromArray(view.projectionMatrix);
-              const viewMatrix = new THREE.Matrix4().fromArray(
-                view.transform.inverse.matrix
-              );
-              camera.matrixWorldInverse.copy(viewMatrix);
-              camera.updateMatrixWorld(true);
-            }
-          }
+          camera.matrixWorldInverse.copy(viewMatrix);
+          camera.updateMatrixWorld(true);
         }
+
         renderer.render(scene, camera);
       });
+
+      loading.classList.add("hidden");
     } catch (err) {
-      debugLog(`AR Scene Error: ${err.message}`);
-      alert(`AR Scene Error: ${err.message}`);
+      showError(`Scene initialization failed: ${err.message}`);
     }
   }
 
-  function initFallbackView() {
-    permissionPopup.classList.add("hidden");
-    container.classList.remove("hidden");
-    modelContainer.classList.add("hidden");
-    fallbackContainer.classList.remove("hidden");
-    loading.classList.remove("hidden");
-
-    // Set up scene
-    fallbackScene = new THREE.Scene();
-    fallbackScene.background = new THREE.Color(0x222222);
-
-    // Set up camera
-    fallbackCamera = new THREE.PerspectiveCamera(
-      60,
-      window.innerWidth / window.innerHeight,
-      0.1,
-      1000
-    );
-    fallbackCamera.position.z = 3;
-
-    // Set up renderer
-    fallbackRenderer = new THREE.WebGLRenderer({
-      antialias: true,
-      powerPreference: "high-performance",
-    });
-    fallbackRenderer.setPixelRatio(window.devicePixelRatio);
-    fallbackRenderer.setSize(window.innerWidth, window.innerHeight);
-    fallbackContainer.appendChild(fallbackRenderer.domElement);
-
-    // Add lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
-    fallbackScene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(1, 1, 1);
-    fallbackScene.add(directionalLight);
-
-    // Load model
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      "models/cube.glb",
-      (gltf) => {
-        fallbackModel = gltf.scene;
-        const box = new THREE.Box3().setFromObject(fallbackModel);
-        const center = box.getCenter(new THREE.Vector3());
-        fallbackModel.position.sub(center);
-        const size = box.getSize(new THREE.Vector3()).length();
-        const scale = 2.0 / size;
-        fallbackModel.scale.set(scale, scale, scale);
-        fallbackScene.add(fallbackModel);
-        loading.classList.add("hidden");
-      },
-      (xhr) => {
-        const percentLoaded = (xhr.loaded / xhr.total) * 100;
-        loading.textContent = `Loading model... ${Math.round(percentLoaded)}%`;
-      },
-      (error) => {
-        console.error("Error loading model:", error);
-        loading.textContent = "Failed to load model";
-      }
-    );
-
-    // Set up controls
-    fallbackControls = new THREE.OrbitControls(
-      fallbackCamera,
-      fallbackRenderer.domElement
-    );
-    fallbackControls.enableDamping = true;
-    fallbackControls.dampingFactor = 0.05;
-    fallbackControls.screenSpacePanning = false;
-    fallbackControls.maxPolarAngle = Math.PI;
-    fallbackControls.minDistance = 1;
-    fallbackControls.maxDistance = 10;
-    fallbackControls.enableTouch = true;
-
-    // Handle window resize
-    window.addEventListener("resize", () => {
-      fallbackCamera.aspect = window.innerWidth / window.innerHeight;
-      fallbackCamera.updateProjectionMatrix();
-      fallbackRenderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    // Animation loop
-    function animate() {
-      requestAnimationFrame(animate);
-
-      // Ensure model is always in front of the camera
-      if (model) {
-        const cameraDirection = new THREE.Vector3();
-        camera.getWorldDirection(cameraDirection);
-
-        model.position
-          .copy(camera.position)
-          .add(cameraDirection.multiplyScalar(2));
-      }
-
-      if (videoTexture) videoTexture.needsUpdate = true;
-      renderer.render(scene, camera);
-    }
-
-    animate();
+  function showError(message) {
+    console.error(message);
+    errorMessage.textContent = message;
+    permissionPopup.classList.remove("hidden");
+    loading.classList.add("hidden");
   }
-  debugLog(`XR support: ${navigator.xr ? "available" : "unavailable"}`);
-  debugLog(
-    `WebGL support: ${
-      THREE.WEBGL.isWebGLAvailable() ? "available" : "unavailable"
-    }`
-  );
-  debugLog(`Secure context: ${window.isSecureContext ? "yes" : "no"}`);
+
+  // Initial checks
+  if (!window.isSecureContext) {
+    showError("Secure context required (HTTPS or localhost)");
+  }
 });
