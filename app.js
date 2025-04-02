@@ -113,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load model
     const loader = new THREE.GLTFLoader();
     loader.load(
-      "models/dababy.glb",
+      "models/cube.glb",
       (gltf) => {
         model = gltf.scene;
 
@@ -174,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load model
     const loader = new THREE.GLTFLoader();
     loader.load(
-      "models/dababy.glb",
+      "models/cube.glb",
       (gltf) => {
         fallbackModel = gltf.scene;
         const box = new THREE.Box3().setFromObject(fallbackModel);
