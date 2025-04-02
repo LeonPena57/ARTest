@@ -1,102 +1,288 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const permissionPopup = document.getElementById("permission-popup");
-  const startButton = document.getElementById("start-ar");
+document.addEventListener("DOMContentLoaded", async () => {
+  // DOM Elements
+  const modeSelection = document.getElementById("mode-selection");
+  const arModeBtn = document.getElementById("ar-mode-btn");
+  const viewerModeBtn = document.getElementById("viewer-mode-btn");
+  const arContainer = document.getElementById("ar-container");
+  const viewerContainer = document.getElementById("viewer-container");
+  const exitArBtn = document.getElementById("exit-ar");
+  const exitViewerBtn = document.getElementById("exit-viewer");
   const loading = document.getElementById("loading");
   const errorMessage = document.getElementById("error-message");
-  const arContainer = document.getElementById("ar-container");
+  const cameraFeed = document.getElementById("camera-feed");
+  const arCanvas = document.getElementById("ar-canvas");
+  const viewerCanvas = document.getElementById("viewer-canvas");
 
-  // Check for WebXR support
-  if (!navigator.xr) {
-    showError("WebXR not supported in this browser");
-    return;
+  // Scene variables
+  let arScene, arCamera, arRenderer, arModel = null;
+  let viewerScene, viewerCamera, viewerRenderer, controls = null;
+  let gltfLoader = new THREE.GLTFLoader();
+  let cameraStream = null;
+  let animationId = null;
+
+  // Initialize both modes
+  initViewerMode();
+  
+  // Event listeners
+  arModeBtn.addEventListener("click", startARExperience);
+  viewerModeBtn.addEventListener("click", startViewerExperience);
+  exitArBtn.addEventListener("click", exitAR);
+  exitViewerBtn.addEventListener("click", exitViewer);
+
+  function initViewerMode() {
+    // Set up viewer scene
+    viewerScene = new THREE.Scene();
+    viewerCamera = new THREE.PerspectiveCamera(
+      75, 
+      window.innerWidth / window.innerHeight, 
+      0.1, 
+      1000
+    );
+    viewerCamera.position.z = 2;
+
+    viewerRenderer = new THREE.WebGLRenderer({ 
+      canvas: viewerCanvas,
+      antialias: true, 
+      alpha: true 
+    });
+    viewerRenderer.setSize(window.innerWidth, window.innerHeight);
+    viewerRenderer.setPixelRatio(window.devicePixelRatio);
+
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    viewerScene.add(ambientLight);
+    
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(1, 1, 1);
+    viewerScene.add(directionalLight);
+
+    // Add pedestal
+    const pedestalGeometry = new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32);
+    const pedestalMaterial = new THREE.MeshPhongMaterial({ 
+      color: 0x6E3B23,
+      specular: 0x111111,
+      shininess: 10
+    });
+    const pedestal = new THREE.Mesh(pedestalGeometry, pedestalMaterial);
+    pedestal.position.y = -0.8;
+    viewerScene.add(pedestal);
+
+    // Handle window resize
+    window.addEventListener('resize', onViewerResize);
   }
 
-  startButton.addEventListener("click", async () => {
+  async function loadModel(scene, isAR = false) {
+    return new Promise((resolve, reject) => {
+      gltfLoader.load(
+        'models/dababy.glb',
+        (gltf) => {
+          const model = gltf.scene;
+          
+          // Scale and position the model
+          model.scale.set(0.5, 0.5, 0.5);
+          
+          if (isAR) {
+            // Position for AR mode (on ground)
+            model.position.set(0, -0.8, -2);
+            model.rotation.y = Math.PI;
+          } else {
+            // Position for viewer mode (on pedestal)
+            model.position.set(0, -0.5, 0);
+          }
+          
+          scene.add(model);
+          resolve(model);
+        },
+        undefined,
+        (error) => {
+          console.error("Error loading model:", error);
+          reject(error);
+        }
+      );
+    });
+  }
+
+  async function startARExperience() {
     try {
-      permissionPopup.classList.add("hidden");
       loading.classList.remove("hidden");
+      modeSelection.classList.add("hidden");
 
-      // Request AR session
-      const session = await navigator.xr.requestSession("immersive-ar", {
-        requiredFeatures: ["local", "hit-test"],
+      // Check for camera support
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("Camera access not supported in this browser");
+      }
+
+      // Get camera stream
+      cameraStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false 
       });
-
-      initXRScene(session);
-    } catch (err) {
-      showError(`AR failed to start: ${err.message}`);
-    }
-  });
-
-  async function initXRScene(session) {
-    try {
-      // Three.js setup
-      const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(
-        70,
-        window.innerWidth / window.innerHeight,
-        0.01,
+      
+      cameraFeed.srcObject = cameraStream;
+      
+      // Initialize AR scene
+      arScene = new THREE.Scene();
+      arCamera = new THREE.PerspectiveCamera(
+        60, 
+        window.innerWidth / window.innerHeight, 
+        0.1, 
         1000
       );
-      const renderer = new THREE.WebGLRenderer({
+      arCamera.position.set(0, 0, 0);
+      
+      arRenderer = new THREE.WebGLRenderer({ 
+        canvas: arCanvas,
         antialias: true,
-        alpha: true,
+        alpha: true
       });
+      arRenderer.setPixelRatio(window.devicePixelRatio);
+      arRenderer.setSize(window.innerWidth, window.innerHeight);
 
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      renderer.xr.enabled = true;
-      renderer.xr.setSession(session);
-      arContainer.appendChild(renderer.domElement);
+      // Add lights
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      arScene.add(ambientLight);
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(0, 1, 0);
+      arScene.add(directionalLight);
+
+      // Load model
+      arModel = await loadModel(arScene, true);
+      
+      // Handle window resize
+      window.addEventListener('resize', onARResize);
+      onARResize();
+      
+      // Show AR container
       arContainer.classList.remove("hidden");
-
-      // Add camera background (real world view)
-      scene.background = new THREE.WebGLRenderTarget().texture;
-
-      // Add simple cube
-      const geometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-      const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(0, 0, -0.5);
-      scene.add(cube);
-
-      // Handle XR session events
-      session.addEventListener("end", () => {
-        location.reload();
-      });
-
-      // Animation loop
-      renderer.setAnimationLoop(() => {
-        // Update camera position from XR frame
-        const frame = session.requestAnimationFrame();
-        const pose = frame.getViewerPose(session.renderState.referenceSpace);
-
-        if (pose) {
-          const view = pose.views[0];
-          camera.projectionMatrix.fromArray(view.projectionMatrix);
-          const viewMatrix = new THREE.Matrix4().fromArray(
-            view.transform.inverse.matrix
-          );
-          camera.matrixWorldInverse.copy(viewMatrix);
-          camera.updateMatrixWorld(true);
-        }
-
-        renderer.render(scene, camera);
-      });
-
+      
+      // Start animation loop
+      animateAR();
+      
       loading.classList.add("hidden");
     } catch (err) {
-      showError(`Scene initialization failed: ${err.message}`);
+      console.error("AR setup failed:", err);
+      showError(`Failed to start AR: ${err.message}`);
+      loading.classList.add("hidden");
+      modeSelection.classList.remove("hidden");
     }
+  }
+
+  function onARResize() {
+    if (!arCamera || !arRenderer) return;
+    
+    arCamera.aspect = window.innerWidth / window.innerHeight;
+    arCamera.updateProjectionMatrix();
+    arRenderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  function animateAR() {
+    animationId = requestAnimationFrame(animateAR);
+    
+    // Rotate model slightly
+    if (arModel) {
+      arModel.rotation.y += 0.005;
+    }
+    
+    arRenderer.render(arScene, arCamera);
+  }
+
+  async function startViewerExperience() {
+    try {
+      modeSelection.classList.add("hidden");
+      loading.classList.remove("hidden");
+      viewerContainer.classList.remove("hidden");
+      
+      // Load Dababy model for viewer if not already loaded
+      if (!viewerScene.children.some(child => child.type === 'Group')) {
+        await loadModel(viewerScene);
+      }
+      
+      // Initialize orbit controls for viewer mode
+      controls = new THREE.OrbitControls(viewerCamera, viewerCanvas);
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.05;
+      controls.screenSpacePanning = false;
+      controls.minDistance = 0.5;
+      controls.maxDistance = 5;
+      
+      // Start animation loop for viewer
+      animateViewer();
+      
+      loading.classList.add("hidden");
+    } catch (err) {
+      console.error("Viewer setup failed:", err);
+      showError("Failed to load 3D model");
+      exitViewer();
+    }
+  }
+
+  function animateViewer() {
+    animationId = requestAnimationFrame(animateViewer);
+    controls.update();
+    viewerRenderer.render(viewerScene, viewerCamera);
+  }
+
+  function onViewerResize() {
+    if (!viewerCamera || !viewerRenderer) return;
+    
+    viewerCamera.aspect = window.innerWidth / window.innerHeight;
+    viewerCamera.updateProjectionMatrix();
+    viewerRenderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  function exitAR() {
+    // Stop animation
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    
+    // Stop camera stream
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+      cameraFeed.srcObject = null;
+      cameraStream = null;
+    }
+    
+    // Clean up Three.js
+    if (arRenderer) {
+      arRenderer.dispose();
+    }
+    
+    // Remove event listeners
+    window.removeEventListener('resize', onARResize);
+    
+    arContainer.classList.add("hidden");
+    modeSelection.classList.remove("hidden");
+  }
+
+  function exitViewer() {
+    // Stop animation
+    if (animationId) {
+      cancelAnimationFrame(animationId);
+      animationId = null;
+    }
+    
+    if (controls) {
+      controls.dispose();
+      controls = null;
+    }
+    
+    viewerContainer.classList.add("hidden");
+    modeSelection.classList.remove("hidden");
   }
 
   function showError(message) {
-    console.error(message);
     errorMessage.textContent = message;
-    permissionPopup.classList.remove("hidden");
-    loading.classList.add("hidden");
-  }
-
-  // Initial checks
-  if (!window.isSecureContext) {
-    showError("Secure context required (HTTPS or localhost)");
+    errorMessage.classList.remove("hidden");
+    
+    setTimeout(() => {
+      errorMessage.classList.add("hidden");
+    }, 5000);
   }
 });

@@ -1,30 +1,161 @@
+:root {
+  --gold: #D4AF37;
+  --marble: #F0E6D2;
+  --dark-bronze: #6E3B23;
+  --light-bronze: #CD7F32;
+  --stone: #8B8C89;
+}
+
 body {
   margin: 0;
+  padding: 0;
+  font-family: 'Cinzel', serif;
+  background: url('https://images.unsplash.com/photo-1547891654-e66ed7ebb968') center/cover no-repeat fixed;
+  color: var(--marble);
+  overflow-x: hidden;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#app-container {
+  width: 100%;
+  max-width: 800px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(0, 0, 0, 0.7);
+  position: relative;
   overflow: hidden;
-  font-family: Arial, sans-serif;
 }
 
-.centered-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.greek-header {
   text-align: center;
-  color: white;
-  background: rgba(0, 0, 0, 0.8);
-  padding: 2rem;
-  border-radius: 1rem;
+  padding: 1rem;
+  width: 100%;
+  background: linear-gradient(to right, transparent, rgba(110, 59, 35, 0.8), transparent);
+  border-bottom: 2px solid var(--gold);
+  margin-bottom: 2rem;
 }
 
-#start-ar {
-  background: #2196f3;
-  color: white;
+.greek-header h1 {
+  font-size: 2rem;
+  letter-spacing: 0.3rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 0;
+  color: var(--gold);
+}
+
+.header-decoration {
+  height: 10px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10"><path d="M0,5 Q25,10 50,5 T100,5" fill="none" stroke="%23D4AF37" stroke-width="1"/></svg>') repeat-x;
+  margin-top: 0.5rem;
+}
+
+#mode-selection {
+  text-align: center;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  width: 80%;
+}
+
+#mode-selection h2 {
+  font-family: 'MedievalSharp', cursive;
+  color: var(--gold);
+  margin-bottom: 2rem;
+}
+
+.mode-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.greek-button {
+  background: linear-gradient(to bottom, var(--dark-bronze), var(--light-bronze));
+  color: var(--marble);
   border: none;
   padding: 1rem 2rem;
   font-size: 1.2rem;
-  border-radius: 0.5rem;
+  font-family: 'Cinzel', serif;
+  border-radius: 5px;
   cursor: pointer;
-  margin-top: 1rem;
+  transition: all 0.3s;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--gold);
+}
+
+.greek-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(212, 175, 55, 0.4);
+}
+
+.greek-button .icon {
+  font-size: 1.4rem;
+}
+
+#ar-container, #viewer-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 100;
+}
+
+#ar-prompt {
+  position: absolute;
+  bottom: 100px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 1rem;
+  border-top: 2px solid var(--gold);
+  border-bottom: 2px solid var(--gold);
+}
+
+#exit-ar {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 101;
+}
+
+#viewer-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  z-index: 101;
+}
+
+.help-button {
+  background: rgba(0, 0, 0, 0.5);
+  color: var(--marble);
+  border: 1px solid var(--gold);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 #loading {
@@ -33,42 +164,77 @@ body {
   left: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
-  color: white;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.8);
+  padding: 2rem;
+  border-radius: 10px;
+  border: 1px solid var(--gold);
 }
 
-.loader {
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
-  border-radius: 50%;
-  width: 30px;
-  height: 30px;
+.greek-loader {
+  width: 60px;
+  height: 60px;
   margin: 0 auto 1rem;
-  animation: spin 1s linear infinite;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,10 L60,40 L90,50 L60,60 L50,90 L40,60 L10,50 L40,40 Z" fill="none" stroke="%23D4AF37" stroke-width="2"/></svg>') no-repeat center;
+  animation: spin 2s linear infinite;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.greek-alert {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(110, 59, 35, 0.9);
+  padding: 2rem;
+  border-radius: 10px;
+  border: 2px solid var(--gold);
+  max-width: 80%;
+  text-align: center;
+  z-index: 300;
+}
+
+.greek-footer {
+  text-align: center;
+  padding: 1rem;
+  width: 100%;
+  font-family: 'MedievalSharp', cursive;
+  font-size: 0.8rem;
+  color: var(--stone);
+  margin-top: auto;
 }
 
 .hidden {
   display: none !important;
 }
 
-#ar-container {
-  position: fixed;
+canvas {
+  display: block;
   width: 100%;
   height: 100%;
+}
+
+/* Previous styles remain the same, just add this: */
+
+#camera-feed {
+  position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -1;
 }
 
 #ar-container canvas {
   position: absolute;
   top: 0;
   left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
 }

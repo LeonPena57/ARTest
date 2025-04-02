@@ -1,27 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AR Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/XRController.js"></script>
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <div id="permission-popup" class="centered-popup">
-      <h1>AR Viewer</h1>
-      <button id="start-ar">Start AR Experience</button>
-      <p id="error-message"></p>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <title>Dababy AR Experience</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app-container">
+    <div id="mode-selection">
+      <h1>Dababy AR Experience</h1>
+      <h2>Choose Your Experience</h2>
+      <div class="mode-buttons">
+        <button id="ar-mode-btn">AR Experience</button>
+        <button id="viewer-mode-btn">3D Viewer</button>
+      </div>
+    </div>
+
+    <div id="ar-container" class="hidden">
+      <video id="camera-feed" autoplay playsinline></video>
+      <canvas id="ar-canvas"></canvas>
+      <div id="controls">
+        <button id="exit-ar">Exit AR</button>
+      </div>
+    </div>
+
+    <div id="viewer-container" class="hidden">
+      <canvas id="viewer-canvas"></canvas>
+      <div id="controls">
+        <button id="exit-viewer">Back to Menu</button>
+      </div>
     </div>
 
     <div id="loading" class="hidden">
-      <div class="loader"></div>
-      <p>Initializing AR...</p>
+      <p>Loading Experience...</p>
     </div>
 
-    <div id="ar-container" class="hidden"></div>
+    <div id="error-message" class="hidden"></div>
+  </div>
 
-    <script src="app.js"></script>
-  </body>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+  <script src="app.js"></script>
+</body>
 </html>
