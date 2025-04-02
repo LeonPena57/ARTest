@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Set up AR camera and session
     const session = await navigator.xr.requestSession("immersive-ar", {
-      requiredFeatures: ["hit-test"],
+      requiredFeatures: ["local-floor"], // Tracks the user's space relative to the ground
     });
     renderer.xr.setSession(session);
 
@@ -110,20 +110,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
     scene.add(ambientLight);
 
-    // Load model
-    const loader = new THREE.GLTFLoader();
-    loader.load(
-      "models/cube.glb",
-      (gltf) => {
-        model = gltf.scene;
+    // ✅ Create a cube
+    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2); // Cube size (meters)
+    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 }); // Green cube
+    model = new THREE.Mesh(geometry, material);
 
-        // Set initial model position (fixed in world)
-        model.position.set(0, 0, -2); // ✅ This places it in front of the user initially
-        scene.add(model);
-      },
-      undefined,
-      (error) => console.error("Error loading model:", error)
-    );
+    // ✅ Position cube in front of user
+    model.position.set(0, 0, -1); // 1 meter in front of user
+    scene.add(model);
 
     // XR animation loop
     function animate() {
