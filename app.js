@@ -18,7 +18,22 @@ document.addEventListener("DOMContentLoaded", () => {
     fallbackControls;
 
   // Event listeners for buttons
-  useCameraBtn.addEventListener("click", initARView);
+  useCameraBtn.addEventListener("click", async () => {
+    try {
+      permissionPopup.classList.add("hidden");
+      container.classList.remove("hidden");
+      loading.classList.remove("hidden");
+
+      // Request AR session **inside the click event**
+      const session = await navigator.xr.requestSession("immersive-ar", {
+        requiredFeatures: ["local-floor"],
+      });
+
+      await initARScene(session);
+    } catch (err) {
+      alert("AR Initialization Error: " + err.message);
+    }
+  });
   viewOnlyBtn.addEventListener("click", initFallbackView);
 
   function showCameraError(message) {
@@ -77,12 +92,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  async function initARScene() {
-    alert("Initializing AR Scene..."); // Debugging step
-
-    permissionPopup.classList.add("hidden");
-    container.classList.remove("hidden");
-    modelContainer.classList.remove("hidden");
+  async function initARScene(session) {
+    alert("Initializing AR Scene...");
 
     // Set up Three.js scene
     scene = new THREE.Scene();
@@ -93,56 +104,47 @@ document.addEventListener("DOMContentLoaded", () => {
     renderer.setSize(window.innerWidth, window.innerHeight);
     modelContainer.appendChild(renderer.domElement);
 
-    alert("Renderer initialized!"); // Debugging step
+    alert("Renderer initialized!");
 
-    try {
-      // Request AR session
-      const session = await navigator.xr.requestSession("immersive-ar", {
-        requiredFeatures: ["local-floor"],
+    // Set session inside the function
+    renderer.xr.setSession(session);
+    alert("AR session started!");
+
+    // Set up AR Camera
+    camera = new THREE.PerspectiveCamera(
+      60,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      1000
+    );
+    scene.add(camera);
+
+    alert("Camera added!");
+
+    // Add lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+    scene.add(ambientLight);
+
+    alert("Lights added!");
+
+    // Create a simple cube
+    const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
+    const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
+    model = new THREE.Mesh(geometry, material);
+    model.position.set(0, 0, -1);
+    scene.add(model);
+
+    alert("Cube added!");
+
+    // Start AR animation loop
+    function animate() {
+      renderer.setAnimationLoop(() => {
+        renderer.render(scene, camera);
       });
-      alert("AR session started!"); // Debugging step
-
-      renderer.xr.setSession(session);
-
-      // Set up AR Camera
-      camera = new THREE.PerspectiveCamera(
-        60,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
-      scene.add(camera);
-
-      alert("Camera added!"); // Debugging step
-
-      // Add lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-      scene.add(ambientLight);
-
-      alert("Lights added!"); // Debugging step
-
-      // Create a cube
-      const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-      const material = new THREE.MeshStandardMaterial({ color: 0x00ff00 });
-      model = new THREE.Mesh(geometry, material);
-      model.position.set(0, 0, -1);
-      scene.add(model);
-
-      alert("Cube added!"); // Debugging step
-
-      // Start AR animation loop
-      function animate() {
-        renderer.setAnimationLoop(() => {
-          renderer.render(scene, camera);
-        });
-      }
-
-      animate();
-      alert("Animation started!"); // Debugging step
-    } catch (error) {
-      alert("AR Initialization Error: " + error.message);
-      console.error("AR Initialization Error:", error);
     }
+
+    animate();
+    alert("Animation started!");
   }
 
   function initFallbackView() {
