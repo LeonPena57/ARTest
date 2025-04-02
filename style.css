@@ -1,129 +1,186 @@
+/* Gallery Gorillas - Olympian Experience */
 :root {
-  --marble-white: #F0EBE3;
-  --gold-leaf: #D4AF37;
-  --bronze-dark: #6E3B23;
-  --sky-blue: #87CEEB;
-  --storm-gray: #4A5568;
+  --gold: #D4AF37;
+  --marble: #F0E6D2;
+  --dark-bronze: #6E3B23;
+  --light-bronze: #CD7F32;
+  --stone: #8B8C89;
+  --olympus-blue: #4682B4;
+  --olive-wreath: #556B2F;
   --blood-red: #8B0000;
+  --ivory: #FFFFF0;
 }
 
 body {
   margin: 0;
   padding: 0;
-  font-family: 'Goudy Bookletter 1911', serif;
+  font-family: 'Cinzel', 'New Athena Unicode', serif;
   background: url('https://images.unsplash.com/photo-1542273917363-3b1817f1a2ec') center/cover no-repeat fixed;
-  color: var(--marble-white);
+  color: var(--marble);
   overflow-x: hidden;
   height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1a1a1a;
 }
 
 #app-container {
   width: 100%;
+  max-width: 900px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  background-color: rgba(10, 10, 10, 0.7);
+  align-items: center;
+  justify-content: space-between;
+  background-color: rgba(10, 10, 10, 0.85);
   position: relative;
   overflow: hidden;
+  border-left: 1px solid rgba(212, 175, 55, 0.2);
+  border-right: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
 }
 
+/* Olympian Temple Header */
 .olympian-header {
   text-align: center;
-  padding: 1.5rem 1rem 3rem;
+  padding: 1.5rem 1rem;
+  width: 100%;
+  background: linear-gradient(to right, transparent, rgba(110, 59, 35, 0.7), transparent);
+  border-bottom: 3px solid var(--gold);
+  margin-bottom: 1rem;
   position: relative;
-  background: linear-gradient(to bottom, rgba(10, 10, 10, 0.9), transparent);
 }
 
-.temple-pediment {
+.olympian-header::before {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 40px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 20"><polygon points="0,20 50,0 100,20" fill="%236E3B23"/></svg>') center/100% 100% no-repeat;
+  right: 0;
+  height: 30px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 30"><polygon points="0,30 50,0 100,30" fill="%236E3B23" opacity="0.8"/><path d="M20,20 Q30,10 40,20 T60,20 Q70,10 80,20" stroke="%23D4AF37" stroke-width="1.5" fill="none"/></svg>') center/cover no-repeat;
 }
 
 .olympian-header h1 {
-  font-family: 'Cinzel', serif;
-  font-size: 2.8rem;
-  letter-spacing: 0.3rem;
-  margin: 0.5rem 0 0;
-  color: var(--gold-leaf);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-}
-
-.subtitle {
-  font-style: italic;
+  font-size: 3rem;
+  letter-spacing: 0.5rem;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
   margin: 0;
-  font-size: 1.1rem;
-  color: var(--marble-white);
-  letter-spacing: 1px;
+  color: var(--gold);
+  background: linear-gradient(to right, var(--gold), var(--ivory), var(--gold));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 1.5rem;
 }
 
+.temple-decoration {
+  height: 15px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 15"><path d="M0,7.5 C20,15 30,0 50,7.5 C70,15 80,0 100,7.5" fill="none" stroke="%23D4AF37" stroke-width="2"/></svg>') repeat-x;
+  margin: 0.5rem auto;
+  width: 80%;
+  opacity: 0.8;
+}
+
+/* Oracle Chamber */
 #mode-selection {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
-  padding: 1rem;
-}
-
-.oracle-chamber {
-  background: rgba(74, 85, 104, 0.6);
-  border: 2px solid var(--gold-leaf);
-  border-radius: 8px;
-  padding: 2.5rem;
-  max-width: 500px;
-  width: 90%;
   text-align: center;
+  padding: 3rem 2rem;
+  background: rgba(20, 20, 20, 0.7);
+  border-radius: 0;
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+  width: 80%;
+  position: relative;
   backdrop-filter: blur(5px);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  border-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="96" height="96" x="2" y="2" fill="none" stroke="%23D4AF37" stroke-width="4" stroke-dasharray="10,5"/></svg>') 10 round;
 }
 
-.oracle-chamber h2 {
+#mode-selection h2 {
   font-family: 'Cinzel', serif;
-  color: var(--gold-leaf);
-  margin-bottom: 1.5rem;
+  color: var(--ivory);
+  margin-bottom: 2.5rem;
   font-size: 1.8rem;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
+  position: relative;
+  text-transform: uppercase;
 }
 
+#mode-selection h2::after {
+  content: "";
+  position: absolute;
+  bottom: -15px;
+  left: 25%;
+  right: 25%;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--gold), transparent);
+}
+
+/* Divine Buttons */
 .mode-buttons {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 2rem;
 }
 
 .olympian-button {
-  background: linear-gradient(to bottom, var(--bronze-dark), #8B4513);
-  color: var(--marble-white);
+  background: linear-gradient(145deg, var(--dark-bronze), var(--light-bronze));
+  color: var(--ivory);
   border: none;
-  padding: 1.2rem 2rem;
+  padding: 1.3rem 2.5rem;
+  font-size: 1.3rem;
   font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.4s;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(212, 175, 55, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.8rem;
-  border: 1px solid var(--gold-leaf);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-  letter-spacing: 1px;
+  gap: 1rem;
+  border: 2px solid var(--gold);
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+  letter-spacing: 2px;
+  position: relative;
+  overflow: hidden;
+  text-transform: uppercase;
+}
+
+.olympian-button::before {
+  content: "";
+  position: absolute;
+  top: -100%;
+  left: -100%;
+  width: 300%;
+  height: 300%;
+  background: linear-gradient(
+    to bottom right,
+    transparent 45%,
+    rgba(212, 175, 55, 0.4) 50%,
+    transparent 55%
+  );
+  transform: rotate(30deg);
+  transition: all 0.7s;
 }
 
 .olympian-button:hover {
-  background: linear-gradient(to bottom, #5a2d18, var(--bronze-dark));
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(212, 175, 55, 0.4);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.5), inset 0 0 15px rgba(212, 175, 55, 0.4);
+  color: var(--gold);
+}
+
+.olympian-button:hover::before {
+  left: 100%;
 }
 
 .olympian-button .icon {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
+  filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.7));
 }
 
+/* Divine Viewing Areas */
 #ar-container, #viewer-container {
   position: fixed;
   top: 0;
@@ -131,6 +188,7 @@ body {
   width: 100%;
   height: 100%;
   z-index: 100;
+  background-color: #0a0a0a;
 }
 
 #camera-feed {
@@ -141,7 +199,7 @@ body {
   height: 100%;
   object-fit: cover;
   z-index: -1;
-  filter: sepia(0.3) contrast(1.1) brightness(0.9);
+  filter: sepia(0.6) contrast(1.2) brightness(0.7);
 }
 
 #ar-canvas, #viewer-canvas {
@@ -153,9 +211,10 @@ body {
   z-index: 1;
 }
 
+/* Divine Controls */
 #ar-controls, #viewer-controls {
   position: absolute;
-  bottom: 30px;
+  bottom: 40px;
   left: 0;
   right: 0;
   display: flex;
@@ -165,18 +224,23 @@ body {
 
 .viewer-instructions {
   position: absolute;
-  bottom: 80px;
+  bottom: 100px;
   left: 0;
   right: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  color: var(--marble-white);
+  gap: 10px;
+  color: var(--ivory);
   font-style: italic;
-  text-shadow: 1px 1px 3px rgba(0,0,0,0.8);
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.9);
+  background: rgba(30, 30, 30, 0.7);
+  padding: 1rem;
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
 }
 
+/* Divine Loading */
 #loading {
   position: fixed;
   top: 50%;
@@ -184,19 +248,19 @@ body {
   transform: translate(-50%, -50%);
   text-align: center;
   z-index: 200;
-  background: rgba(74, 85, 104, 0.9);
-  padding: 2.5rem 3rem;
-  border-radius: 8px;
-  border: 1px solid var(--gold-leaf);
-  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+  background: rgba(30, 30, 30, 0.95);
+  padding: 3rem 4rem;
+  border-radius: 0;
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 40px rgba(212, 175, 55, 0.5);
 }
 
 .olympian-loader {
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 1.5rem;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,10 L60,40 L90,50 L60,60 L50,90 L40,60 L10,50 L40,40 Z" fill="none" stroke="%23D4AF37" stroke-width="3"/></svg>') no-repeat center;
-  animation: spin 2s linear infinite;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 2rem;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M50,10 L60,40 L90,50 L60,60 L50,90 L40,60 L10,50 L40,40 Z" fill="none" stroke="%23D4AF37" stroke-width="4" stroke-linecap="round"/></svg>') no-repeat center;
+  animation: spin 2.5s linear infinite;
 }
 
 @keyframes spin {
@@ -205,60 +269,105 @@ body {
 }
 
 #loading p {
-  color: var(--marble-white);
-  font-size: 1.1rem;
+  color: var(--ivory);
+  font-size: 1.4rem;
   margin: 0;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  font-style: italic;
 }
 
+/* Divine Messages */
 .olympian-alert {
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: rgba(139, 0, 0, 0.9);
-  padding: 2rem;
-  border-radius: 8px;
+  background: rgba(70, 30, 30, 0.95);
+  padding: 3rem;
+  border-radius: 0;
   max-width: 80%;
   text-align: center;
   z-index: 300;
-  border: 2px solid var(--gold-leaf);
-  box-shadow: 0 0 20px rgba(139, 0, 0, 0.5);
+  border: 3px solid var(--gold);
+  box-shadow: 0 0 40px rgba(139, 0, 0, 0.7);
+  font-family: 'Cinzel', serif;
+  font-size: 1.3rem;
+  line-height: 1.6;
 }
 
+/* Temple Footer */
 .olympian-footer {
   text-align: center;
-  padding: 1.2rem;
+  padding: 1.5rem;
+  width: 100%;
+  font-family: 'Cinzel', serif;
   font-size: 0.9rem;
-  color: var(--marble-white);
-  position: relative;
+  color: var(--stone);
   margin-top: auto;
+  background: linear-gradient(to right, transparent, rgba(110, 59, 35, 0.5), transparent);
+  border-top: 1px solid var(--gold);
+  position: relative;
 }
 
-.meander-border {
+.olympian-footer::before {
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 10px;
-  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 10"><path d="M0,5 C20,10 30,0 50,5 C70,10 80,0 100,5" fill="none" stroke="%23D4AF37" stroke-width="2"/></svg>') repeat-x;
+  right: 0;
+  height: 15px;
+  background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 15"><path d="M0,7.5 C20,15 30,0 50,7.5 C70,15 80,0 100,7.5" fill="none" stroke="%23D4AF37" stroke-width="2"/></svg>') repeat-x;
+  opacity: 0.7;
 }
 
 .hidden {
   display: none !important;
 }
 
-@media (max-width: 600px) {
+/* Tablet Responsiveness */
+@media (max-width: 768px) {
   .olympian-header h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
   
-  .oracle-chamber {
-    padding: 1.5rem;
+  #mode-selection {
+    padding: 2rem 1.5rem;
+    width: 85%;
+  }
+  
+  .olympian-button {
+    padding: 1.1rem 2rem;
+    font-size: 1.1rem;
+  }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 480px) {
+  .olympian-header h1 {
+    font-size: 1.8rem;
+    letter-spacing: 0.3rem;
+  }
+  
+  #mode-selection {
+    padding: 1.5rem 1rem;
+    width: 90%;
+  }
+  
+  #mode-selection h2 {
+    font-size: 1.4rem;
   }
   
   .olympian-button {
     padding: 1rem 1.5rem;
     font-size: 1rem;
+  }
+  
+  .olympian-loader {
+    width: 60px;
+    height: 60px;
+  }
+  
+  #loading p {
+    font-size: 1.1rem;
   }
 }

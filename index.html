@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>DaBaby Experience</title>
+  <title>Gallery Gorillas</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Goudy+Bookletter+1911&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -13,19 +13,19 @@
   <div id="app-container">
     <header class="olympian-header">
       <div class="temple-pediment"></div>
-      <h1>DaBaby EXPERIENCE</h1>
-      <p class="subtitle">Witness DaBaby's Vibe</p>
+      <h1>GALLERY GORILLAS</h1>
+      <p class="subtitle">Mythological AR Experience</p>
     </header>
 
     <div id="mode-selection">
       <div class="oracle-chamber">
-        <h2>Choose Your Mode</h2>
+        <h2>Choose Your Experience</h2>
         <div class="mode-buttons">
           <button id="ar-mode-btn" class="olympian-button">
-            <span class="icon">📱</span> AR Mode
+            <span class="icon">⚡</span> AR Mode
           </button>
           <button id="viewer-mode-btn" class="olympian-button">
-            <span class="icon">👀</span> Viewer Mode
+            <span class="icon">🏛️</span> Viewer Mode
           </button>
         </div>
       </div>
@@ -35,6 +35,8 @@
       <video id="camera-feed" autoplay playsinline></video>
       <canvas id="ar-canvas"></canvas>
       <div id="ar-controls">
+        <div id="placement-instructions">Move your device to detect surfaces</div>
+        <button id="place-model" class="olympian-button hidden">Place Model</button>
         <button id="exit-ar" class="olympian-button">Exit AR</button>
       </div>
     </div>
@@ -52,13 +54,13 @@
 
     <div id="loading" class="hidden">
       <div class="olympian-loader"></div>
-      <p>Loading DaBaby...</p>
+      <p>Channeling Divine Energy...</p>
     </div>
 
     <div id="error-message" class="olympian-alert hidden"></div>
 
     <footer class="olympian-footer">
-      <p>DaBaby Official Experience</p>
+      <p>Gallery Gorillas Official Experience</p>
       <div class="meander-border"></div>
     </footer>
   </div>

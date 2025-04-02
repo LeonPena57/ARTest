@@ -12,6 +12,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   const cameraFeed = document.getElementById("camera-feed");
   const arCanvas = document.getElementById("ar-canvas");
   const viewerCanvas = document.getElementById("viewer-canvas");
+  const placementInstructions = document.getElementById("placement-instructions");
+  const placeModelBtn = document.getElementById("place-model");
 
   // Scene variables
   let arScene, arCamera, arRenderer, arModel = null;
@@ -19,6 +21,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   let gltfLoader = new THREE.GLTFLoader();
   let cameraStream = null;
   let animationId = null;
+  let planeMesh = null;
+  let placed = false;
+  let surfaceDetected = false;
 
   // Initialize both modes
   initViewerMode();
@@ -28,12 +33,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   viewerModeBtn.addEventListener("click", startViewerExperience);
   exitArBtn.addEventListener("click", exitAR);
   exitViewerBtn.addEventListener("click", exitViewer);
+  placeModelBtn.addEventListener("click", placeModel);
+  arCanvas.addEventListener("click", handleTap);
 
   function initViewerMode() {
     // Set up viewer scene
     viewerScene = new THREE.Scene();
     
-    // Add simple environment
+    // Add environment
     const backgroundTexture = new THREE.TextureLoader().load('https://images.unsplash.com/photo-1607153333879-c174d265f1d6');
     const background = new THREE.Mesh(
       new THREE.SphereGeometry(100, 32, 32),
@@ -65,14 +72,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     viewerScene.add(ambientLight);
     
-    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight1.position.set(5, 10, 7);
-    directionalLight1.castShadow = true;
-    viewerScene.add(directionalLight1);
-    
-    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
-    directionalLight2.position.set(-5, 5, -5);
-    viewerScene.add(directionalLight2);
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 10, 7);
+    directionalLight.castShadow = true;
+    viewerScene.add(directionalLight);
 
     // Handle window resize
     window.addEventListener('resize', onViewerResize);
@@ -92,9 +95,10 @@ document.addEventListener("DOMContentLoaded", async () => {
           model.scale.set(scale, scale, scale);
           
           if (isAR) {
-            // Position for AR mode
-            model.position.set(0, -1.5, -3);
+            // Position for AR mode (initially hidden)
+            model.position.set(0, -100, 0);
             model.rotation.y = Math.PI / 4;
+            model.visible = false;
           } else {
             // Position for viewer mode
             model.position.set(0, -0.5, 0);
@@ -105,7 +109,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
         undefined,
         (error) => {
-          console.error("Error loading DaBaby model:", error);
+          console.error("Error loading model:", error);
           reject(error);
         }
       );
@@ -160,7 +164,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       directionalLight.position.set(0, 1, 0.5);
       arScene.add(directionalLight);
 
-      // Load DaBaby model
+      // Create plane for surface detection
+      planeMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(10, 10),
+        new THREE.MeshBasicMaterial({ 
+          color: 0x00ff00, 
+          transparent: true, 
+          opacity: 0.5,
+          visible: false
+        })
+      );
+      planeMesh.rotation.x = -Math.PI / 2;
+      arScene.add(planeMesh);
+
+      // Load model
       arModel = await loadModel(arScene, true);
       
       // Handle window resize
@@ -182,6 +199,56 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
+  function handleTap(event) {
+    if (placed || !surfaceDetected) return;
+    
+    // Get tap position in normalized device coordinates
+    const tapPosition = new THREE.Vector2(
+      (event.clientX / window.innerWidth) * 2 - 1,
+      -(event.clientY / window.innerHeight) * 2 + 1
+    );
+
+    // Position model at the detected plane position
+    if (planeMesh) {
+      arModel.position.copy(planeMesh.position);
+      arModel.visible = true;
+      placed = true;
+      placementInstructions.textContent = "Model placed!";
+      placeModelBtn.classList.add("hidden");
+    }
+  }
+
+  function placeModel() {
+    if (!surfaceDetected || placed) return;
+    
+    // Position model at the detected plane position
+    if (planeMesh) {
+      arModel.position.copy(planeMesh.position);
+      arModel.visible = true;
+      placed = true;
+      placementInstructions.textContent = "Model placed!";
+      placeModelBtn.classList.add("hidden");
+    }
+  }
+
+  function updatePlaneDetection() {
+    if (placed || !arModel) return;
+    
+    // Simulate surface detection by moving plane based on device orientation
+    const time = Date.now() * 0.001;
+    const x = Math.sin(time * 0.5) * 2;
+    const z = Math.cos(time * 0.5) * 2;
+    
+    planeMesh.position.set(x, -1, z - 3);
+    
+    // Randomly decide when surface is "detected" for demo purposes
+    if (!surfaceDetected && time > 2) {
+      surfaceDetected = true;
+      placementInstructions.textContent = "Surface detected! Tap to place or use button below";
+      placeModelBtn.classList.remove("hidden");
+    }
+  }
+
   function onARResize() {
     if (!arCamera || !arRenderer) return;
     
@@ -193,10 +260,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   function animateAR() {
     animationId = requestAnimationFrame(animateAR);
     
-    if (arModel) {
-      // Subtle animation
-      arModel.rotation.y += 0.002;
-      arModel.position.y = -1.5 + Math.sin(Date.now() * 0.001) * 0.05;
+    // Update plane detection
+    updatePlaneDetection();
+    
+    // Animate model if placed
+    if (placed && arModel) {
+      arModel.rotation.y += 0.005;
     }
     
     arRenderer.render(arScene, arCamera);
@@ -261,6 +330,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.removeEventListener('resize', onARResize);
     arContainer.classList.add("hidden");
     modeSelection.classList.remove("hidden");
+    placed = false;
+    surfaceDetected = false;
+    placementInstructions.textContent = "Move your device to detect surfaces";
+    placeModelBtn.classList.add("hidden");
   }
 
   function exitViewer() {
