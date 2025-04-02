@@ -14,16 +14,19 @@ body {
   height: 100%;
 }
 
-#model-container,
-#fallback-container {
-  display: none; /* Add this */
+#model-container {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
+  z-index: 1;
 }
 
-#model-container.visible,
-#fallback-container.visible {
-  display: block; /* Add this */
+#model-container canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 #ar-view {
@@ -72,4 +75,14 @@ body {
   background: rgba(0, 0, 0, 0.7);
   padding: 20px;
   border-radius: 10px;
+}
+
+#debug-container {
+  background: rgba(0, 0, 0, 0.7);
+  padding: 10px;
+  font-family: monospace;
+  font-size: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  pointer-events: none;
 }

@@ -68,79 +68,85 @@ document.addEventListener("DOMContentLoaded", () => {
       scene = new THREE.Scene();
       debugLog("Scene created");
 
-      // Set up WebGL Renderer
+      // Set up WebGL Renderer with XR compatibility
       debugLog("Creating WebGL renderer...");
       renderer = new THREE.WebGLRenderer({
         antialias: true,
         alpha: true,
-        preserveDrawingBuffer: true, // Helps with debugging
+        preserveDrawingBuffer: true,
       });
 
       if (!renderer) {
         throw new Error("Failed to create WebGL renderer");
       }
 
+      // Enable XR and set session
       renderer.xr.enabled = true;
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      debugLog(`Appending renderer to: ${modelContainer.id}`);
-      modelContainer.appendChild(renderer.domElement);
-      debugLog("Renderer initialized");
-
-      // Verify WebGL context
-      const gl = renderer.getContext();
-      debugLog(`WebGL context: ${gl ? "created" : "failed"}`);
-      debugLog(
-        `WebGL attributes: ${JSON.stringify(gl.getContextAttributes())}`
-      );
-
-      // Set XR session
-      debugLog("Setting XR session...");
       await renderer.xr.setSession(session);
       debugLog("XR session set");
 
-      // Set up AR Camera
-      debugLog("Creating AR camera");
-      camera = new THREE.PerspectiveCamera(
-        60,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        1000
-      );
+      // Set renderer size and append to DOM
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      modelContainer.appendChild(renderer.domElement);
+      debugLog("Renderer initialized");
+
+      // Create XR camera (crucial for AR view)
+      camera = new THREE.PerspectiveCamera();
+      camera.matrixAutoUpdate = false;
       scene.add(camera);
-      debugLog(`Camera position: ${camera.position.toArray()}`);
 
-      // Add lighting
-      const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
-      scene.add(ambientLight);
-      debugLog("Lights added");
+      // Add camera passthrough background
+      scene.background = new THREE.WebGLRenderTarget().texture;
+      const bgTexture = new THREE.WebGLRenderTarget(
+        window.innerWidth,
+        window.innerHeight
+      ).texture;
+      scene.background = bgTexture;
 
-      // Create test cube
+      // Create camera feed plane
+      const cameraFeedGeometry = new THREE.PlaneGeometry(2, 2);
+      const cameraFeedMaterial = new THREE.MeshBasicMaterial({
+        map: bgTexture,
+        toneMapped: false,
+      });
+      const cameraFeed = new THREE.Mesh(cameraFeedGeometry, cameraFeedMaterial);
+      cameraFeed.frustumCulled = false;
+      scene.add(cameraFeed);
+
+      // Add AR content
       const geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
       const material = new THREE.MeshStandardMaterial({
         color: 0x00ff00,
-        wireframe: true, // Wireframe for debugging
+        wireframe: true,
       });
       model = new THREE.Mesh(geometry, material);
       model.position.set(0, 0, -1);
       scene.add(model);
-      debugLog("Cube added");
 
-      // Animation loop with debug info
-      let frameCount = 0;
-      function animate() {
-        renderer.setAnimationLoop(() => {
-          frameCount++;
-          if (frameCount % 60 === 0) {
-            debugLog(`Rendering frame ${frameCount}`);
-            debugLog(`Camera position: ${camera.position.toArray()}`);
-            debugLog(`Cube position: ${model.position.toArray()}`);
+      // Animation loop with XR updates
+      renderer.setAnimationLoop((timestamp, frame) => {
+        if (frame) {
+          const bgTexture = renderer.xr.getCameraImage();
+          if (bgTexture) cameraFeedMaterial.map = bgTexture;
+
+          const pose = frame.getViewerPose(
+            new THREE.XRReferenceSpace(renderer.xr.getReferenceSpace())
+          );
+
+          if (pose) {
+            for (const view of pose.views) {
+              const viewport = renderer.xr.getViewport(view);
+              camera.projectionMatrix.fromArray(view.projectionMatrix);
+              const viewMatrix = new THREE.Matrix4().fromArray(
+                view.transform.inverse.matrix
+              );
+              camera.matrixWorldInverse.copy(viewMatrix);
+              camera.updateMatrixWorld(true);
+            }
           }
-          renderer.render(scene, camera);
-        });
-      }
-
-      animate();
-      debugLog("Animation started");
+        }
+        renderer.render(scene, camera);
+      });
     } catch (err) {
       debugLog(`AR Scene Error: ${err.message}`);
       alert(`AR Scene Error: ${err.message}`);
