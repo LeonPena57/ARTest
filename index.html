@@ -1,96 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>DaBaby AR Viewer</title>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background-color: #000;
-            touch-action: none;
-        }
-        
-        #container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-        }
-        
-        #model-container, #fallback-container {
-            width: 100%;
-            height: 100%;
-        }
-        
-        #permission-popup {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.9);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: white;
-            text-align: center;
-            padding: 20px;
-        }
-        
-        #permission-popup button {
-            background: #ff0000;
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            font-size: 18px;
-            margin: 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        
-        .hidden {
-            display: none !important;
-        }
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #000;
+        touch-action: none;
+      }
 
-        #loading {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            z-index: 101;
-            background: rgba(0,0,0,0.7);
-            padding: 20px;
-            border-radius: 10px;
-        }
+      #container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      #model-container,
+      #fallback-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      #permission-popup {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.9);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 100;
+        color: white;
+        text-align: center;
+        padding: 20px;
+      }
+
+      #permission-popup button {
+        background: #ff0000;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        font-size: 18px;
+        margin: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      #loading {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        z-index: 101;
+        background: rgba(0, 0, 0, 0.7);
+        padding: 20px;
+        border-radius: 10px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="permission-popup">
-        <h1>DaBaby AR Viewer</h1>
-        <p>View the DaBaby model in AR or 3D</p>
-        <button id="use-camera">Use Camera (AR)</button>
-        <button id="view-only">View in 3D</button>
+      <h1>DaBaby AR Viewer</h1>
+      <p>View the DaBaby model in AR or 3D</p>
+      <button id="use-camera">Use Camera (AR)</button>
+      <button id="view-only">View in 3D</button>
     </div>
 
     <div id="loading" class="hidden">Loading model...</div>
 
     <div id="container" class="hidden">
-        <video id="ar-view" playsinline class="hidden"></video>
-        <div id="model-container" class="hidden"></div>
-        <div id="fallback-container" class="hidden"></div>
+      <video
+        style="display: none"
+        id="ar-view"
+        playsinline
+        class="hidden"
+      ></video>
+      <div id="model-container" class="hidden"></div>
+      <div id="fallback-container" class="hidden"></div>
     </div>
 
     <script src="app.js"></script>
-</body>
+  </body>
 </html>
