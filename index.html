@@ -5,57 +5,67 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>Museum of the Gods</title>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&display=swap">
+  <title>DaBaby Experience</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Goudy+Bookletter+1911&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app-container">
-    <header class="greek-header">
-      <h1>MUSEUM OF THE GODS</h1>
-      <div class="header-decoration"></div>
+    <header class="olympian-header">
+      <div class="temple-pediment"></div>
+      <h1>DaBaby EXPERIENCE</h1>
+      <p class="subtitle">Witness DaBaby's Vibe</p>
     </header>
 
     <div id="mode-selection">
-      <h2>Choose Your Experience</h2>
-      <div class="mode-buttons">
-        <button id="ar-mode-btn" class="greek-button">
-          <span class="icon">⚡</span> AR Experience
-        </button>
-        <button id="viewer-mode-btn" class="greek-button">
-          <span class="icon">🏛️</span> 3D Viewer
-        </button>
+      <div class="oracle-chamber">
+        <h2>Choose Your Mode</h2>
+        <div class="mode-buttons">
+          <button id="ar-mode-btn" class="olympian-button">
+            <span class="icon">📱</span> AR Mode
+          </button>
+          <button id="viewer-mode-btn" class="olympian-button">
+            <span class="icon">👀</span> Viewer Mode
+          </button>
+        </div>
       </div>
     </div>
 
     <div id="ar-container" class="hidden">
       <video id="camera-feed" autoplay playsinline></video>
-      <button id="exit-ar" class="greek-button">Exit AR</button>
+      <canvas id="ar-canvas"></canvas>
+      <div id="ar-controls">
+        <button id="exit-ar" class="olympian-button">Exit AR</button>
+      </div>
     </div>
 
     <div id="viewer-container" class="hidden">
+      <canvas id="viewer-canvas"></canvas>
       <div id="viewer-controls">
-        <button id="rotate-help" class="help-button">🔄 Rotate</button>
-        <button id="zoom-help" class="help-button">🔍 Zoom</button>
-        <button id="exit-viewer" class="greek-button">Back to Menu</button>
+        <div class="viewer-instructions">
+          <span>Touch & drag to orbit</span>
+          <span>Pinch to zoom</span>
+        </div>
+        <button id="exit-viewer" class="olympian-button">Exit Viewer</button>
       </div>
     </div>
 
     <div id="loading" class="hidden">
-      <div class="greek-loader"></div>
-      <p>Summoning the Gods...</p>
+      <div class="olympian-loader"></div>
+      <p>Loading DaBaby...</p>
     </div>
 
-    <div id="error-message" class="greek-alert hidden"></div>
+    <div id="error-message" class="olympian-alert hidden"></div>
 
-    <footer class="greek-footer">
-      <p>Temple of Knowledge • Oracle v1.0</p>
+    <footer class="olympian-footer">
+      <p>DaBaby Official Experience</p>
+      <div class="meander-border"></div>
     </footer>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
