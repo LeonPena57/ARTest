@@ -10,15 +10,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const loading = document.getElementById("loading");
   const errorMessage = document.getElementById("error-message");
   const cameraFeed = document.getElementById("camera-feed");
-  const arCanvas = document.getElementById("ar-canvas");
-  const viewerCanvas = document.getElementById("viewer-canvas");
 
   // Scene variables
   let arScene, arCamera, arRenderer, arModel = null;
   let viewerScene, viewerCamera, viewerRenderer, controls = null;
   let gltfLoader = new THREE.GLTFLoader();
   let cameraStream = null;
-  let animationId = null;
 
   // Initialize both modes
   initViewerMode();
@@ -40,13 +37,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     );
     viewerCamera.position.z = 2;
 
-    viewerRenderer = new THREE.WebGLRenderer({ 
-      canvas: viewerCanvas,
-      antialias: true, 
-      alpha: true 
-    });
+    viewerRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     viewerRenderer.setSize(window.innerWidth, window.innerHeight);
     viewerRenderer.setPixelRatio(window.devicePixelRatio);
+    viewerContainer.appendChild(viewerRenderer.domElement);
 
     // Add lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -68,7 +62,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     viewerScene.add(pedestal);
 
     // Handle window resize
-    window.addEventListener('resize', onViewerResize);
+    window.addEventListener('resize', () => {
+      viewerCamera.aspect = window.innerWidth / window.innerHeight;
+      viewerCamera.updateProjectionMatrix();
+      viewerRenderer.setSize(window.innerWidth, window.innerHeight);
+    });
   }
 
   async function loadModel(scene, isAR = false) {
@@ -83,7 +81,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           
           if (isAR) {
             // Position for AR mode (on ground)
-            model.position.set(0, -0.8, -2);
+            model.position.set(0, -0.5, -2);
             model.rotation.y = Math.PI;
           } else {
             // Position for viewer mode (on pedestal)
@@ -107,23 +105,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       loading.classList.remove("hidden");
       modeSelection.classList.add("hidden");
 
-      // Check for camera support
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error("Camera access not supported in this browser");
-      }
-
       // Get camera stream
       cameraStream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
-          facingMode: 'environment',
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: false 
+        video: { facingMode: 'environment' },
+        audio: false
       });
       
+      // Show camera feed
       cameraFeed.srcObject = cameraStream;
-      
+      arContainer.classList.remove("hidden");
+
       // Initialize AR scene
       arScene = new THREE.Scene();
       arCamera = new THREE.PerspectiveCamera(
@@ -135,12 +126,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       arCamera.position.set(0, 0, 0);
       
       arRenderer = new THREE.WebGLRenderer({ 
-        canvas: arCanvas,
         antialias: true,
         alpha: true
       });
       arRenderer.setPixelRatio(window.devicePixelRatio);
       arRenderer.setSize(window.innerWidth, window.innerHeight);
+      arContainer.appendChild(arRenderer.domElement);
 
       // Add lights
       const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -156,9 +147,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Handle window resize
       window.addEventListener('resize', onARResize);
       onARResize();
-      
-      // Show AR container
-      arContainer.classList.remove("hidden");
       
       // Start animation loop
       animateAR();
@@ -181,7 +169,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function animateAR() {
-    animationId = requestAnimationFrame(animateAR);
+    requestAnimationFrame(animateAR);
     
     // Rotate model slightly
     if (arModel) {
@@ -192,18 +180,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   async function startViewerExperience() {
+    modeSelection.classList.add("hidden");
+    loading.classList.remove("hidden");
+    viewerContainer.classList.remove("hidden");
+    
     try {
-      modeSelection.classList.add("hidden");
-      loading.classList.remove("hidden");
-      viewerContainer.classList.remove("hidden");
-      
       // Load Dababy model for viewer if not already loaded
       if (!viewerScene.children.some(child => child.type === 'Group')) {
         await loadModel(viewerScene);
       }
       
       // Initialize orbit controls for viewer mode
-      controls = new THREE.OrbitControls(viewerCamera, viewerCanvas);
+      controls = new THREE.OrbitControls(viewerCamera, viewerRenderer.domElement);
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.screenSpacePanning = false;
@@ -211,7 +199,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       controls.maxDistance = 5;
       
       // Start animation loop for viewer
-      animateViewer();
+      viewerRenderer.setAnimationLoop(() => {
+        controls.update();
+        viewerRenderer.render(viewerScene, viewerCamera);
+      });
       
       loading.classList.add("hidden");
     } catch (err) {
@@ -221,27 +212,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function animateViewer() {
-    animationId = requestAnimationFrame(animateViewer);
-    controls.update();
-    viewerRenderer.render(viewerScene, viewerCamera);
-  }
-
-  function onViewerResize() {
-    if (!viewerCamera || !viewerRenderer) return;
-    
-    viewerCamera.aspect = window.innerWidth / window.innerHeight;
-    viewerCamera.updateProjectionMatrix();
-    viewerRenderer.setSize(window.innerWidth, window.innerHeight);
-  }
-
   function exitAR() {
-    // Stop animation
-    if (animationId) {
-      cancelAnimationFrame(animationId);
-      animationId = null;
-    }
-    
     // Stop camera stream
     if (cameraStream) {
       cameraStream.getTracks().forEach(track => track.stop());
@@ -252,6 +223,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Clean up Three.js
     if (arRenderer) {
       arRenderer.dispose();
+      arContainer.removeChild(arRenderer.domElement);
+      arRenderer = null;
     }
     
     // Remove event listeners
@@ -262,10 +235,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 
   function exitViewer() {
-    // Stop animation
-    if (animationId) {
-      cancelAnimationFrame(animationId);
-      animationId = null;
+    if (viewerRenderer) {
+      viewerRenderer.setAnimationLoop(null);
     }
     
     if (controls) {

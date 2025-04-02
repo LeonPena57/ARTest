@@ -5,45 +5,57 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>Dababy AR Experience</title>
+  <title>Museum of the Gods</title>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=MedievalSharp&display=swap">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="app-container">
+    <header class="greek-header">
+      <h1>MUSEUM OF THE GODS</h1>
+      <div class="header-decoration"></div>
+    </header>
+
     <div id="mode-selection">
-      <h1>Dababy AR Experience</h1>
       <h2>Choose Your Experience</h2>
       <div class="mode-buttons">
-        <button id="ar-mode-btn">AR Experience</button>
-        <button id="viewer-mode-btn">3D Viewer</button>
+        <button id="ar-mode-btn" class="greek-button">
+          <span class="icon">⚡</span> AR Experience
+        </button>
+        <button id="viewer-mode-btn" class="greek-button">
+          <span class="icon">🏛️</span> 3D Viewer
+        </button>
       </div>
     </div>
 
     <div id="ar-container" class="hidden">
       <video id="camera-feed" autoplay playsinline></video>
-      <canvas id="ar-canvas"></canvas>
-      <div id="controls">
-        <button id="exit-ar">Exit AR</button>
-      </div>
+      <button id="exit-ar" class="greek-button">Exit AR</button>
     </div>
 
     <div id="viewer-container" class="hidden">
-      <canvas id="viewer-canvas"></canvas>
-      <div id="controls">
-        <button id="exit-viewer">Back to Menu</button>
+      <div id="viewer-controls">
+        <button id="rotate-help" class="help-button">🔄 Rotate</button>
+        <button id="zoom-help" class="help-button">🔍 Zoom</button>
+        <button id="exit-viewer" class="greek-button">Back to Menu</button>
       </div>
     </div>
 
     <div id="loading" class="hidden">
-      <p>Loading Experience...</p>
+      <div class="greek-loader"></div>
+      <p>Summoning the Gods...</p>
     </div>
 
-    <div id="error-message" class="hidden"></div>
+    <div id="error-message" class="greek-alert hidden"></div>
+
+    <footer class="greek-footer">
+      <p>Temple of Knowledge • Oracle v1.0</p>
+    </footer>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
