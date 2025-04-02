@@ -22,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       permissionPopup.classList.add("hidden");
       container.classList.remove("hidden");
+      modelContainer.classList.remove("hidden");
       loading.classList.remove("hidden");
 
       // Request AR session **inside the click event**
@@ -150,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function initFallbackView() {
     permissionPopup.classList.add("hidden");
     container.classList.remove("hidden");
+    modelContainer.classList.add("hidden");
     fallbackContainer.classList.remove("hidden");
     loading.classList.remove("hidden");
 
