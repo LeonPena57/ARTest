@@ -91,17 +91,16 @@ document.addEventListener("DOMContentLoaded", async () => {
           // Scale the model appropriately
           const box = new THREE.Box3().setFromObject(model);
           const size = box.getSize(new THREE.Vector3()).length();
-          const scale = 2.5 / size;
+          const scale = 3.0 / size; // Further increased scale to make the model larger
           model.scale.set(scale, scale, scale);
+          
+          // Centered position for both AR and viewer modes
+          model.position.set(0, 1.0, 0); // Adjusted position to move it higher
           
           if (isAR) {
             // Position for AR mode (initially hidden)
-            model.position.set(0, -100, 0);
             model.rotation.y = Math.PI / 4;
             model.visible = false;
-          } else {
-            // Position for viewer mode
-            model.position.set(0, -0.5, 0);
           }
           
           scene.add(model);
@@ -140,13 +139,26 @@ document.addEventListener("DOMContentLoaded", async () => {
       
       // Initialize AR scene
       arScene = new THREE.Scene();
+
+      // Add environment (same as viewer mode)
+      const backgroundTexture = new THREE.TextureLoader().load('https://images.unsplash.com/photo-1607153333879-c174d265f1d6');
+      const background = new THREE.Mesh(
+        new THREE.SphereGeometry(100, 32, 32),
+        new THREE.MeshBasicMaterial({
+          map: backgroundTexture,
+          side: THREE.BackSide
+        })
+      );
+      arScene.add(background);
+
       arCamera = new THREE.PerspectiveCamera(
         60, 
         window.innerWidth / window.innerHeight, 
         0.1, 
         1000
       );
-      
+      arCamera.position.set(0, 1.5, 5);
+
       arRenderer = new THREE.WebGLRenderer({ 
         canvas: arCanvas,
         antialias: true,
@@ -156,30 +168,20 @@ document.addEventListener("DOMContentLoaded", async () => {
       arRenderer.setSize(window.innerWidth, window.innerHeight);
       arRenderer.setClearColor(0x000000, 0);
 
-      // Add lighting for AR
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+      // Add lighting (same as viewer mode)
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
       arScene.add(ambientLight);
       
       const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(0, 1, 0.5);
+      directionalLight.position.set(5, 10, 7);
+      directionalLight.castShadow = true;
       arScene.add(directionalLight);
-
-      // Create plane for surface detection
-      planeMesh = new THREE.Mesh(
-        new THREE.PlaneGeometry(10, 10),
-        new THREE.MeshBasicMaterial({ 
-          color: 0x00ff00, 
-          transparent: true, 
-          opacity: 0.5,
-          visible: false
-        })
-      );
-      planeMesh.rotation.x = -Math.PI / 2;
-      arScene.add(planeMesh);
 
       // Load model
       arModel = await loadModel(arScene, true);
-      
+      arModel.visible = true; // Automatically make the model visible
+      placed = true; // Mark as placed
+
       // Handle window resize
       window.addEventListener('resize', onARResize);
       onARResize();
@@ -199,54 +201,16 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  function handleTap(event) {
-    if (placed || !surfaceDetected) return;
-    
-    // Get tap position in normalized device coordinates
-    const tapPosition = new THREE.Vector2(
-      (event.clientX / window.innerWidth) * 2 - 1,
-      -(event.clientY / window.innerHeight) * 2 + 1
-    );
+  function updatePlaneDetection() {
+    // Remove plane detection logic as the model is automatically placed
+  }
 
-    // Position model at the detected plane position
-    if (planeMesh) {
-      arModel.position.copy(planeMesh.position);
-      arModel.visible = true;
-      placed = true;
-      placementInstructions.textContent = "Model placed!";
-      placeModelBtn.classList.add("hidden");
-    }
+  function handleTap(event) {
+    // Remove tap handling logic as the model is automatically placed
   }
 
   function placeModel() {
-    if (!surfaceDetected || placed) return;
-    
-    // Position model at the detected plane position
-    if (planeMesh) {
-      arModel.position.copy(planeMesh.position);
-      arModel.visible = true;
-      placed = true;
-      placementInstructions.textContent = "Model placed!";
-      placeModelBtn.classList.add("hidden");
-    }
-  }
-
-  function updatePlaneDetection() {
-    if (placed || !arModel) return;
-    
-    // Simulate surface detection by moving plane based on device orientation
-    const time = Date.now() * 0.001;
-    const x = Math.sin(time * 0.5) * 2;
-    const z = Math.cos(time * 0.5) * 2;
-    
-    planeMesh.position.set(x, -1, z - 3);
-    
-    // Randomly decide when surface is "detected" for demo purposes
-    if (!surfaceDetected && time > 2) {
-      surfaceDetected = true;
-      placementInstructions.textContent = "Surface detected! Tap to place or use button below";
-      placeModelBtn.classList.remove("hidden");
-    }
+    // Remove place model button functionality
   }
 
   function onARResize() {
@@ -259,9 +223,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   function animateAR() {
     animationId = requestAnimationFrame(animateAR);
-    
-    // Update plane detection
-    updatePlaneDetection();
     
     // Animate model if placed
     if (placed && arModel) {
@@ -291,7 +252,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       controls.enableDamping = true;
       controls.dampingFactor = 0.05;
       controls.minDistance = 3;
-      controls.maxDistance = 10;
+      controls.maxDistance = 20; // Increased maximum zoom level
       controls.target.set(0, 0.5, 0);
       controls.enablePan = false;
       
